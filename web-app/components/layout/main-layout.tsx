@@ -10,9 +10,9 @@ interface MainLayoutProps {
 
 export function MainLayout({ currentUser, children }: MainLayoutProps) {
   return (
-    <div className="min-h-svh bg-[#0A0E1A] text-[#E2E8F0]">
+    <div className="min-h-svh bg-background">
       <div className="flex min-h-svh">
-        <LeftNav user={currentUser} />
+        <LeftNav />
         <main className="min-w-0 flex-1">{children}</main>
       </div>
     </div>

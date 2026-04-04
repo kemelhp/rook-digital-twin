@@ -4,12 +4,10 @@ REST: текущий индекс здоровья (in-memory) + история 
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, HTTPException, Query
 
-from app.db.engine import get_session
-from app.db import repository as repo
 from app.models.health_index import HealthHistory, HealthIndex
+from app.services.timeseries_store import timeseries_store
 from app.storage.time_series import storage
 
 router = APIRouter(prefix="/api", tags=["health"])
@@ -31,7 +29,10 @@ async def get_health_history(
     from_ts: float | None = Query(default=None),
     to_ts: float | None = Query(default=None),
     limit: int = Query(default=1000, ge=1, le=10_000),
-    session: AsyncSession = Depends(get_session),
 ) -> list[HealthHistory]:
-    # История — из PostgreSQL
-    return await repo.get_health_history(session, loco_id, from_ts=from_ts, to_ts=to_ts, limit=limit)
+    return await timeseries_store.get_health_history(
+        loco_id,
+        from_ts=from_ts,
+        to_ts=to_ts,
+        limit=limit,
+    )

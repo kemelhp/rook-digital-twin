@@ -6,6 +6,9 @@ import { serverApiBaseUrl, sessionCookieName } from "@/lib/config"
 import type { UserSummary } from "@/lib/api"
 
 export const dynamic = "force-dynamic"
+export const metadata = {
+  title: "Profile",
+}
 
 async function fetchProfileData(): Promise<{
   currentUser: UserSummary

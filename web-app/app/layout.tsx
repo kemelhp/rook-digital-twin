@@ -1,16 +1,18 @@
 import type { Metadata } from "next"
-import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google"
+import { Space_Grotesk, DM_Sans, IBM_Plex_Mono, Geist } from "next/font/google"
 import type { ReactNode } from "react"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-display",
-})
+// Display font for headings - bold, technical
+const geistHeading = Geist({subsets:['latin'],variable:'--font-heading'})
 
+// Body font - clean, readable
+const dmSans = DM_Sans({subsets:['latin'],variable:'--font-sans'})
+
+// Monospace for technical data
 const fontMono = IBM_Plex_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
@@ -18,8 +20,8 @@ const fontMono = IBM_Plex_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Rook Digital Twin Auth",
-  description: "Session-based authentication and profile workspace for the Rook digital twin project.",
+  title: "Rook Digital Twin | Locomotive Telemetry",
+  description: "Real-time locomotive telemetry visualization and monitoring dashboard with advanced health analytics.",
 }
 
 export default function RootLayout({
@@ -32,11 +34,9 @@ export default function RootLayout({
       lang="en"
       suppressHydrationWarning
       className={cn(
-        "antialiased",
-        fontMono.variable,
-        spaceGrotesk.variable,
-        "font-sans"
-      )}
+              "antialiased",
+              fontMono.variable
+            , "font-sans", dmSans.variable, geistHeading.variable)}
     >
       <body>
         <ThemeProvider>{children}</ThemeProvider>

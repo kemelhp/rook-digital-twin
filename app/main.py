@@ -7,12 +7,16 @@ from __future__ import annotations
 import logging
 import time
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.session_auth import bootstrap_default_users
 from app.config import get_cors_origins, get_settings, load_thresholds
+from app.db.engine import get_session
+from app.db import repository as repo
 from app.db.engine import create_tables
+from app.models.locomotive import LocomotiveSample
 from app.routers import (
     alerts_router,
     auth_router,
@@ -23,7 +27,8 @@ from app.routers import (
     users_router,
     websocket,
 )
-from app.services.bootstrap_data import bootstrap_mock_telemetry
+from app.services.timeseries_store import timeseries_store
+from app.services.bootstrap_locomotives import bootstrap_locomotives
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,8 +70,9 @@ def create_app() -> FastAPI:
     async def startup() -> None:
         load_thresholds()
         await create_tables()
+        await timeseries_store.initialize()
         await bootstrap_default_users()
-        await bootstrap_mock_telemetry()
+        await bootstrap_locomotives()
         logger.info(
             "DB tables ready. App started on %s:%s",
             settings.app_host,
@@ -100,6 +106,22 @@ def create_app() -> FastAPI:
                 "axes": 6,
                 "traction": "diesel-electric",
             },
+        ]
+
+    @app.get("/api/locomotives", response_model=list[LocomotiveSample], tags=["system"])
+    async def locomotives(
+        session: AsyncSession = Depends(get_session),
+    ) -> list[LocomotiveSample]:
+        rows = await repo.list_locomotives(session)
+        return [
+            LocomotiveSample(
+                loco_id=row.loco_id,
+                loco_type=row.loco_type,
+                label=row.label,
+                manufacturer=row.manufacturer,
+                is_active=row.is_active,
+            )
+            for row in rows
         ]
 
     return app

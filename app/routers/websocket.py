@@ -16,19 +16,17 @@ import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 
-from app.db.engine import AsyncSessionLocal
-from app.db import repository as repo
 from app.models.telemetry import LocoType
 from app.services.alert_engine import alert_engine
 from app.services.health_engine import health_engine
 from app.services.simulator import create_simulator
+from app.services.timeseries_store import timeseries_store
 from app.storage.time_series import storage
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 HEARTBEAT_INTERVAL = 15.0  # секунды
-# Записывать в БД каждые N фреймов (не каждый тик, чтобы не перегружать БД)
 DB_WRITE_EVERY = 5
 
 
@@ -56,7 +54,9 @@ async def ws_telemetry(
         loco_id=loco_id,
     )
     store = storage.get_or_create(sim.loco_id)
-    logger.info("WS connected: loco=%s scenario=%s freq=%.1f", sim.loco_id, scenario, frequency)
+    logger.info(
+        "WS connected: loco=%s scenario=%s freq=%.1f", sim.loco_id, scenario, frequency
+    )
 
     heartbeat_task = asyncio.create_task(_heartbeat(websocket))
     tick = 0
@@ -64,7 +64,6 @@ async def ws_telemetry(
     try:
         async for frame in sim.stream():
             tick += 1
-
             # Обновить сценарий если клиент прислал команду (non-blocking check)
             try:
                 raw = await asyncio.wait_for(websocket.receive_text(), timeout=0.001)
@@ -84,9 +83,8 @@ async def ws_telemetry(
             for alert in alert_summary.alerts:
                 store.push_alert(alert)
 
-            # PostgreSQL (батчинг — каждые DB_WRITE_EVERY тиков)
             if tick % DB_WRITE_EVERY == 0:
-                asyncio.create_task(_persist(frame, hi, alert_summary.alerts))
+                asyncio.create_task(_persist(frame, hi))
 
             # Отправить клиенту
             payload = {
@@ -104,16 +102,11 @@ async def ws_telemetry(
         heartbeat_task.cancel()
 
 
-async def _persist(frame, hi, alerts) -> None:
-    """Фоновое сохранение в PostgreSQL — не блокирует WS-поток."""
+async def _persist(frame, hi) -> None:
     try:
-        async with AsyncSessionLocal() as session:
-            await repo.save_telemetry(session, frame)
-            await repo.save_health(session, hi)
-            for alert in alerts:
-                await repo.save_alert(session, alert)
+        await timeseries_store.write_frame_and_health(frame, hi)
     except Exception as exc:
-        logger.warning("DB write failed (non-fatal): %s", exc)
+        logger.warning("Timeseries write failed (non-fatal): %s", exc)
 
 
 async def _heartbeat(websocket: WebSocket) -> None:

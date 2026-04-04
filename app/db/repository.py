@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.models import (
     AlertRecord,
     HealthRecord,
+    LocomotiveRecord,
     TelemetryRecord,
     UserRecord,
     UserSessionRecord,
@@ -63,12 +64,6 @@ async def get_telemetry(
     stmt = stmt.order_by(TelemetryRecord.ts.desc()).limit(limit)
     result = await session.execute(stmt)
     return [row.payload for row in result.scalars()]
-
-
-async def has_telemetry(session: AsyncSession, loco_id: str) -> bool:
-    stmt = select(TelemetryRecord.id).where(TelemetryRecord.loco_id == loco_id).limit(1)
-    result = await session.execute(stmt)
-    return result.scalar_one_or_none() is not None
 
 
 async def get_replay(
@@ -365,3 +360,44 @@ async def purge_expired_user_sessions(session: AsyncSession) -> int:
     )
     await session.commit()
     return result.rowcount or 0
+
+
+async def get_locomotive_by_id(
+    session: AsyncSession,
+    loco_id: str,
+) -> LocomotiveRecord | None:
+    stmt = select(LocomotiveRecord).where(LocomotiveRecord.loco_id == loco_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def list_locomotives(
+    session: AsyncSession,
+    active_only: bool = True,
+) -> list[LocomotiveRecord]:
+    stmt = select(LocomotiveRecord).order_by(LocomotiveRecord.loco_id.asc())
+    if active_only:
+        stmt = stmt.where(LocomotiveRecord.is_active.is_(True))
+    result = await session.execute(stmt)
+    return list(result.scalars())
+
+
+async def create_locomotive(
+    session: AsyncSession,
+    loco_id: str,
+    loco_type: str,
+    label: str,
+    manufacturer: str,
+    is_active: bool = True,
+) -> LocomotiveRecord:
+    record = LocomotiveRecord(
+        loco_id=loco_id,
+        loco_type=loco_type,
+        label=label,
+        manufacturer=manufacturer,
+        is_active=is_active,
+    )
+    session.add(record)
+    await session.commit()
+    await session.refresh(record)
+    return record

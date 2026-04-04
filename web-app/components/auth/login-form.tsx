@@ -52,16 +52,26 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative flex min-h-svh items-center justify-center overflow-hidden bg-[#0A0E1A] px-5 py-10 sm:px-8">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(59,130,246,0.2),transparent_34%),radial-gradient(circle_at_82%_78%,rgba(14,165,233,0.14),transparent_36%)]" />
+    <div className="relative flex min-h-screen items-center justify-center bg-background px-4 py-10 sm:px-8">
       <div className="relative w-full max-w-md">
-        <Card className="border border-[#1E2640] bg-[#0D1220]/95 shadow-[0_20px_70px_rgba(2,6,23,0.65)]">
-          <CardHeader className="space-y-2 pb-4">
-            <CardTitle className="text-2xl text-[#E2E8F0]">Sign in</CardTitle>
+        <Card className="shadow-lg">
+          <CardHeader className="space-y-1 border-b pb-6">
+            <div className="flex flex-col gap-1">
+              <div className="flex items-baseline gap-2">
+                <CardTitle className="text-3xl font-bold tracking-tight">
+                  rook
+                </CardTitle>
+                <span className="text-xs font-mono font-semibold tracking-widest text-muted-foreground">
+                  DIGITAL TWIN
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">Locomotive Telemetry Control Center</p>
+            </div>
           </CardHeader>
-          <CardContent className="space-y-4">
+
+          <CardContent className="space-y-6 pt-6">
             {error ? (
-              <Alert variant="destructive" className="border-red-500/50 bg-red-500/10 text-red-200">
+              <Alert variant="destructive">
                 <AlertTitle>Sign-in failed</AlertTitle>
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -69,49 +79,59 @@ export function LoginForm() {
 
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#94A3B8]">Email</Label>
+                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-widest">
+                  Email address
+                </Label>
                 <Input
                   id="email"
                   type="email"
                   autoComplete="email"
-                  placeholder="you@company.com"
+                  placeholder="operator@rook.local"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   disabled={isSubmitting || isPending}
-                  className="border-[#1E2640] bg-[#0A0E1A] text-[#E2E8F0] placeholder:text-[#64748B]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-[#94A3B8]">Password</Label>
+                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-widest">
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type="password"
                   autoComplete="current-password"
-                  placeholder="Enter your password"
+                  placeholder="••••••••"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   disabled={isSubmitting || isPending}
-                  className="border-[#1E2640] bg-[#0A0E1A] text-[#E2E8F0] placeholder:text-[#64748B]"
                 />
               </div>
 
               <Button
                 type="submit"
                 size="lg"
-                className="w-full border border-[#2D4A80] bg-[#1E2D50] text-[#60A5FA] hover:bg-[#223761]"
+                className="w-full"
                 disabled={isSubmitting || isPending}
               >
                 {isSubmitting || isPending ? (
                   <>
-                    <Spinner />
-                    Signing in
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Authenticating
                   </>
                 ) : (
-                  "Login"
+                  "Sign in"
                 )}
               </Button>
             </form>
+
+            <div className="border-t pt-4">
+              <p className="text-xs text-muted-foreground text-center">
+                <span className="font-mono">Default credentials:</span>
+                <br />
+                admin@rook.local / ChangeMe123!
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>

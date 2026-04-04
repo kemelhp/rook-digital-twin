@@ -139,6 +139,14 @@ export interface LocomotiveProfile {
   traction: string
 }
 
+export interface LocomotiveUnit {
+  loco_id: string
+  loco_type: "KZ8A" | "TE33A"
+  label: string
+  manufacturer: string
+  is_active: boolean
+}
+
 export class ApiError extends Error {
   status: number
 
@@ -213,6 +221,10 @@ export function createUser(payload: CreateUserRequest) {
 
 export function fetchLocomotiveProfiles() {
   return apiRequest<LocomotiveProfile[]>("/api/locomotive/profiles")
+}
+
+export function fetchLocomotives() {
+  return apiRequest<LocomotiveUnit[]>("/api/locomotives")
 }
 
 export function fetchCurrentHealth(locoId: string) {

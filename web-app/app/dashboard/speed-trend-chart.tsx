@@ -34,34 +34,34 @@ const trendMeta: Record<
   speed: {
     label: "Скорость",
     unit: "км/ч",
-    color: "#3B82F6",
+    color: "#3b82f6",
     yDomain: [0, 120],
     yTicks: [0, 40, 80, 120],
-    referenceLine: { value: 120, color: "#EF4444" },
+    referenceLine: { value: 120, color: "#ef4444" },
   },
   motor_temp: {
     label: "Температуры ТЭД",
     unit: "°C",
-    color: "#22C55E",
+    color: "#22c55e",
     yDomain: [40, 200],
     yTicks: [40, 80, 120, 160, 200],
-    referenceLine: { value: 160, color: "#EF4444" },
+    referenceLine: { value: 160, color: "#ef4444" },
   },
   fuel: {
     label: "Топливо",
     unit: "%",
-    color: "#22C55E",
+    color: "#22c55e",
     yDomain: [0, 100],
     yTicks: [0, 25, 50, 75, 100],
-    referenceLine: { value: 15, color: "#EAB308" },
+    referenceLine: { value: 15, color: "#eab308" },
   },
   motor_current: {
     label: "Ток ТЭД",
     unit: "A",
-    color: "#60A5FA",
+    color: "#06b6d4",
     yDomain: [0, 1200],
     yTicks: [0, 400, 800, 1200],
-    referenceLine: { value: 1000, color: "#F97316" },
+    referenceLine: { value: 1000, color: "#f97316" },
   },
 }
 
@@ -116,10 +116,29 @@ function toChartData(
 
 function formatTimestamp(ts: number) {
   return new Date(ts * 1000).toLocaleTimeString("ru-RU", {
-    hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
   })
+}
+
+function buildXAxisTicks(points: TrendPoint[]): number[] {
+  const lastIndex = points.length - 1
+  if (lastIndex <= 0) {
+    return [0]
+  }
+
+  if (lastIndex < 4) {
+    return Array.from(new Set([0, lastIndex]))
+  }
+
+  return Array.from(
+    new Set([
+      0,
+      Math.round(lastIndex * 0.33),
+      Math.round(lastIndex * 0.66),
+      lastIndex,
+    ])
+  ).sort((a, b) => a - b)
 }
 
 export function SpeedTrendChart({
@@ -137,6 +156,7 @@ export function SpeedTrendChart({
     () => toChartData(frames, metric, windowMinutes),
     [frames, metric, windowMinutes]
   )
+  const xTicks = React.useMemo(() => buildXAxisTicks(data), [data])
 
   const chartConfig = {
     value: {
@@ -147,8 +167,8 @@ export function SpeedTrendChart({
 
   if (data.length === 0) {
     return (
-      <div className="flex h-[160px] w-full items-center justify-center text-xs text-[#64748B]">
-        Нет данных за выбранное окно
+      <div className="flex h-40 w-full items-center justify-center text-xs text-slate-500 font-medium">
+        No data for selected timeframe
       </div>
     )
   }
@@ -156,7 +176,7 @@ export function SpeedTrendChart({
   return (
     <ChartContainer
       config={chartConfig}
-      className="aspect-auto h-[160px] w-full [&_.recharts-cartesian-axis-tick_text]:fill-[#64748B] [&_.recharts-cartesian-axis-tick_text]:text-[9px] [&_.recharts-cartesian-axis-tick_text]:font-sans"
+      className="aspect-auto h-40 w-full [&_.recharts-cartesian-axis-tick_text]:fill-slate-500 [&_.recharts-cartesian-axis-tick_text]:text-xs [&_.recharts-cartesian-axis-tick_text]:font-mono"
       initialDimension={{ width: 640, height: 160 }}
     >
       <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 4 }}>
@@ -166,12 +186,15 @@ export function SpeedTrendChart({
             <stop offset="100%" stopColor={meta.color} stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid vertical={false} stroke="#1E2640" strokeDasharray="0" />
+        <CartesianGrid vertical={false} stroke="#1e293b" strokeDasharray="3,3" opacity={0.3} />
         <XAxis
           dataKey="t"
           type="number"
           domain={[0, Math.max(data.length - 1, 1)]}
-          ticks={[0, Math.floor(data.length / 3), Math.floor((data.length * 2) / 3), Math.max(data.length - 1, 0)]}
+          ticks={xTicks}
+          interval="preserveStartEnd"
+          minTickGap={26}
+          tickMargin={8}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => {
@@ -196,10 +219,10 @@ export function SpeedTrendChart({
           />
         ) : null}
         <ChartTooltip
-          cursor={{ stroke: "#1E2640", strokeWidth: 1 }}
+          cursor={{ stroke: "#1e293b", strokeWidth: 1 }}
           content={
             <ChartTooltipContent
-              className="border-[#1E2640] bg-[#0D1220] text-[#E2E8F0]"
+              className="border-slate-700 bg-slate-900/95 text-slate-100"
               labelFormatter={(_, payload) => {
                 const ts = payload?.[0]?.payload?.ts
                 return typeof ts === "number" ? formatTimestamp(ts) : "—"
