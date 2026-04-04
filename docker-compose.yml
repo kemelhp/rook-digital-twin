@@ -38,5 +38,18 @@ services:
       - ./config:/app/config
     restart: unless-stopped
 
+  web:
+    build:
+      context: ./web-app
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"
+      NEXT_PUBLIC_WS_URL: "ws://localhost:8000"
+    restart: unless-stopped
+
 volumes:
   postgres_data:
