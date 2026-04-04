@@ -9,8 +9,15 @@ from datetime import datetime, timezone
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.models import AlertRecord, HealthRecord, TelemetryRecord
+from app.db.models import (
+    AlertRecord,
+    HealthRecord,
+    TelemetryRecord,
+    UserRecord,
+    UserSessionRecord,
+)
 from app.models.alerts import Alert, AlertStatus
+from app.models.auth import UserRole
 from app.models.health_index import HealthGrade, HealthHistory, HealthIndex
 from app.models.telemetry import TelemetryFrame
 
@@ -211,3 +218,132 @@ async def get_alerts(
             resolved_at=row.resolved_at.timestamp() if row.resolved_at else None,
         ))
     return alerts
+
+
+# ---------------------------------------------------------------------------
+# Users and sessions
+# ---------------------------------------------------------------------------
+
+
+async def get_user_by_email(
+    session: AsyncSession,
+    email: str,
+) -> UserRecord | None:
+    stmt = select(UserRecord).where(UserRecord.email == email)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def get_user_by_id(
+    session: AsyncSession,
+    user_id: int,
+) -> UserRecord | None:
+    stmt = select(UserRecord).where(UserRecord.id == user_id)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def list_users(
+    session: AsyncSession,
+    active_only: bool = False,
+) -> list[UserRecord]:
+    stmt = select(UserRecord).order_by(UserRecord.created_at.asc())
+    if active_only:
+        stmt = stmt.where(UserRecord.is_active.is_(True))
+    result = await session.execute(stmt)
+    return list(result.scalars())
+
+
+async def create_user(
+    session: AsyncSession,
+    email: str,
+    full_name: str,
+    role: UserRole | str,
+    password_hash: str,
+    password_salt: str,
+    is_active: bool = True,
+) -> UserRecord:
+    record = UserRecord(
+        email=email,
+        full_name=full_name,
+        role=role.value if isinstance(role, UserRole) else role,
+        password_hash=password_hash,
+        password_salt=password_salt,
+        is_active=is_active,
+    )
+    session.add(record)
+    await session.commit()
+    await session.refresh(record)
+    return record
+
+
+async def create_user_session(
+    session: AsyncSession,
+    user_id: int,
+    session_token_hash: str,
+    expires_at: datetime,
+    user_agent: str | None = None,
+    ip_address: str | None = None,
+) -> UserSessionRecord:
+    record = UserSessionRecord(
+        user_id=user_id,
+        session_token_hash=session_token_hash,
+        expires_at=expires_at,
+        user_agent=user_agent,
+        ip_address=ip_address,
+    )
+    session.add(record)
+    await session.commit()
+    await session.refresh(record)
+    return record
+
+
+async def get_valid_session_with_user(
+    session: AsyncSession,
+    session_token_hash: str,
+) -> tuple[UserSessionRecord, UserRecord] | None:
+    stmt = (
+        select(UserSessionRecord, UserRecord)
+        .join(UserRecord, UserRecord.id == UserSessionRecord.user_id)
+        .where(UserSessionRecord.session_token_hash == session_token_hash)
+        .where(UserSessionRecord.revoked_at.is_(None))
+        .where(UserSessionRecord.expires_at > _now())
+        .where(UserRecord.is_active.is_(True))
+        .limit(1)
+    )
+    result = await session.execute(stmt)
+    row = result.first()
+    if row is None:
+        return None
+    return row[0], row[1]
+
+
+async def revoke_session(
+    session: AsyncSession,
+    session_token_hash: str,
+) -> bool:
+    record = await get_session_by_hash(session, session_token_hash)
+    if record is None or record.revoked_at is not None:
+        return False
+    record.revoked_at = _now()
+    await session.commit()
+    return True
+
+
+async def get_session_by_hash(
+    session: AsyncSession,
+    session_token_hash: str,
+) -> UserSessionRecord | None:
+    stmt = select(UserSessionRecord).where(
+        UserSessionRecord.session_token_hash == session_token_hash
+    )
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none()
+
+
+async def purge_expired_user_sessions(session: AsyncSession) -> int:
+    result = await session.execute(
+        delete(UserSessionRecord).where(UserSessionRecord.expires_at <= _now())
+    )
+    await session.commit()
+    return result.rowcount or 0

@@ -10,9 +10,19 @@ import time
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings, load_thresholds
+from app.auth.session_auth import bootstrap_default_users
+from app.config import get_cors_origins, get_settings, load_thresholds
 from app.db.engine import create_tables
-from app.routers import alerts_router, config_api, export, health, history, websocket
+from app.routers import (
+    alerts_router,
+    auth_router,
+    config_api,
+    export,
+    health,
+    history,
+    users_router,
+    websocket,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,7 +44,7 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=get_cors_origins(),
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -42,6 +52,8 @@ def create_app() -> FastAPI:
 
     # Роутеры
     app.include_router(websocket.router)
+    app.include_router(auth_router.router)
+    app.include_router(users_router.router)
     app.include_router(health.router)
     app.include_router(history.router)
     app.include_router(alerts_router.router)
@@ -52,6 +64,7 @@ def create_app() -> FastAPI:
     async def startup() -> None:
         load_thresholds()
         await create_tables()
+        await bootstrap_default_users()
         logger.info(
             "DB tables ready. App started on %s:%s",
             settings.app_host, settings.app_port,
