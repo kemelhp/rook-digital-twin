@@ -3,6 +3,8 @@ Real-time digital twin dashboard for locomotive health monitoring (HackNU, Team 
 
 docker-compose up --build
 
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
 source venv/bin/activate
 uvicorn app.main:app --reload --port 8000
 

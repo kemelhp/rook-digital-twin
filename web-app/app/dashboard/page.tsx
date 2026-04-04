@@ -4,21 +4,18 @@ import { useState } from "react"
 
 import {
   ArrowDown01Icon,
-  ChartLineData01Icon,
   CircleIcon,
-  DashboardSquare01Icon,
   FlashIcon,
   FuelStationIcon,
   InformationCircleIcon,
   PipelineIcon,
   RotateClockwiseIcon,
-  Settings02Icon,
-  Target01Icon,
   TemperatureIcon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons"
 import { HugeiconsIcon } from "@hugeicons/react"
 
+import { LeftNav } from "./left-nav"
 import { SpeedTrendChart, type TrendMetric, type TrendWindow } from "./speed-trend-chart"
 
 export default function DashboardPage() {
@@ -34,53 +31,11 @@ export default function DashboardPage() {
 
   const windowTabs: TrendWindow[] = [1, 5, 15]
 
-   return (
-     <div className="[font-synthesis:none] flex overflow-clip bg-[#0A0E1A] antialiased text-xs/4">
-       <div className="flex w-360 h-225 overflow-clip bg-[#0A0E1A] shrink-0">
-         <div className="w-16 h-225 flex flex-col items-center shrink-0 py-5 gap-2 bg-[#0D1220] border-r border-r-solid border-r-[#1E2640]">
-           <div className="flex items-center justify-center mb-5 rounded-[10px] shrink-0 size-9" style={{ backgroundImage: 'linear-gradient(in oklab 135deg, oklab(62.3% -0.033 -0.185) 0%, oklab(58.5% 0.025 -0.202) 100%)' }}>
-             <div className="flex text-white font-['Inter',system-ui,sans-serif] font-extrabold shrink-0 text-[15px]/4.5">
-               R
-             </div>
-           </div>
-           <div className="flex items-center justify-center rounded-[10px] bg-[#1E2D50] shrink-0 size-11">
-             <HugeiconsIcon
-               icon={DashboardSquare01Icon}
-               strokeWidth={2}
-               className="size-5 text-[#3B82F6]"
-             />
-           </div>
-           <div className="flex items-center justify-center rounded-[10px] shrink-0 size-11">
-             <HugeiconsIcon
-               icon={Target01Icon}
-               strokeWidth={2}
-               className="size-5 text-[#4A5568]"
-             />
-           </div>
-           <div className="flex items-center justify-center rounded-[10px] shrink-0 size-11">
-             <HugeiconsIcon
-               icon={ChartLineData01Icon}
-               strokeWidth={2}
-               className="size-5 text-[#4A5568]"
-             />
-           </div>
-           <div className="flex items-center justify-center rounded-[10px] shrink-0 size-11">
-             <HugeiconsIcon
-               icon={FlashIcon}
-               strokeWidth={2}
-               className="size-5 text-[#4A5568]"
-             />
-           </div>
-           <div className="grow shrink basis-[0%]" />
-           <div className="flex items-center justify-center mb-2 rounded-[10px] shrink-0 size-11">
-             <HugeiconsIcon
-               icon={Settings02Icon}
-               strokeWidth={2}
-               className="size-5 text-[#4A5568]"
-             />
-           </div>
-         </div>
-         <div className="grow shrink basis-[0%] flex flex-col h-225 min-w-0 overflow-clip">
+    return (
+      <div className="[font-synthesis:none] flex overflow-clip bg-[#0A0E1A] antialiased text-xs/4">
+        <div className="flex w-360 h-225 overflow-clip bg-[#0A0E1A] shrink-0">
+          <LeftNav />
+          <div className="grow shrink basis-[0%] flex flex-col h-225 min-w-0 overflow-clip">
            <div className="h-14 flex items-center shrink-0 px-5 gap-3.5 bg-[#0D1220] border-b border-b-solid border-b-[#1E2640]">
              <div className="flex items-center rounded-lg py-1.5 px-3 gap-2.5 bg-[#141929] border border-solid border-[#1E2640]">
                <div className="rounded-[50%] bg-[#22C55E] [box-shadow:#22C55E_0px_0px_6px] shrink-0 size-2" />
