@@ -4,16 +4,9 @@ import { type FormEvent, useDeferredValue, useState } from "react"
 import { useRouter } from "next/navigation"
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Spinner } from "@/components/ui/spinner"
@@ -70,24 +63,12 @@ function formatDate(value: number | null) {
   }).format(new Date(value * 1000))
 }
 
-function initials(name: string) {
-  return name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("")
-}
-
 interface ProfileShellProps {
   initialUser: UserSummary
   initialUsers: UserSummary[]
 }
 
-export function ProfileShell({
-  initialUser,
-  initialUsers,
-}: ProfileShellProps) {
+export function ProfileShell({ initialUser, initialUsers }: ProfileShellProps) {
   const router = useRouter()
   const [currentUser, setCurrentUser] = useState<UserSummary | null>(initialUser)
   const [users, setUsers] = useState<UserSummary[]>(initialUsers)
@@ -101,8 +82,7 @@ export function ProfileShell({
   const [search, setSearch] = useState("")
   const deferredSearch = useDeferredValue(search)
 
-  const canReviewUsers =
-    currentUser?.role === "staff" || currentUser?.role === "admin"
+  const canReviewUsers = currentUser?.role === "staff" || currentUser?.role === "admin"
   const canCreateUsers = currentUser?.role === "admin"
 
   const filteredUsers = users.filter((user) => {
@@ -132,6 +112,7 @@ export function ProfileShell({
       if (user.role === "staff" || user.role === "admin") {
         nextUsers = await fetchUsers()
       }
+
       setCurrentUser(user)
       setUsers(nextUsers)
     } catch (error) {
@@ -182,40 +163,22 @@ export function ProfileShell({
   }
 
   return (
-    <div className="relative isolate min-h-svh overflow-hidden px-5 py-8 sm:px-8 lg:px-10">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(237,173,54,0.24),transparent_30%),radial-gradient(circle_at_bottom_right,_rgba(22,132,149,0.18),transparent_34%)]" />
-
-      <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="flex flex-col gap-4 rounded-[2rem] border border-border/60 bg-background/75 p-6 shadow-[0_24px_90px_rgba(15,23,42,0.12)] backdrop-blur-xl lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <Badge className={roleStyles[currentUser.role]}>
-                {currentUser.role}
-              </Badge>
-              <Badge variant="outline" className="border-border/70 bg-background/70">
-                Session active
-              </Badge>
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 p-4 sm:p-5 lg:p-6">
+        <header className="flex flex-col gap-4 rounded-2xl border border-[#1E2640] bg-[#0D1220] p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold text-[#E2E8F0] sm:text-2xl">{currentUser.full_name}</h1>
+              <Badge className={roleStyles[currentUser.role]}>{currentUser.role}</Badge>
             </div>
-            <div>
-              <p className="text-sm font-medium uppercase tracking-[0.32em] text-muted-foreground">
-                Crew profile
-              </p>
-              <h1 className="mt-2 font-heading text-3xl font-semibold text-balance sm:text-4xl">
-                Welcome, {currentUser.full_name}
-              </h1>
-            </div>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground sm:text-base">
-              This page is connected to the backend session layer, so access changes
-              with your role. Staff can inspect the directory and admins can add
-              new accounts without leaving the app.
-            </p>
+            <p className="font-mono text-xs text-[#94A3B8] sm:text-sm">{currentUser.email}</p>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
               onClick={() => void loadProfile({ silent: true })}
               disabled={isRefreshing || isLoggingOut}
+              className="border-[#1E2640] bg-[#141929] text-[#94A3B8] hover:bg-[#1A2339] hover:text-[#E2E8F0]"
             >
               {isRefreshing ? (
                 <>
@@ -223,13 +186,14 @@ export function ProfileShell({
                   Refreshing
                 </>
               ) : (
-                "Refresh data"
+                "Refresh"
               )}
             </Button>
             <Button
               variant="secondary"
               onClick={() => void handleLogout()}
               disabled={isLoggingOut}
+              className="border border-[#2D4A80] bg-[#1E2D50] text-[#60A5FA] hover:bg-[#223761]"
             >
               {isLoggingOut ? (
                 <>
@@ -244,153 +208,72 @@ export function ProfileShell({
         </header>
 
         {pageError ? (
-          <Alert variant="destructive">
-            <AlertTitle>Unable to load the full workspace</AlertTitle>
+          <Alert variant="destructive" className="border-red-500/50 bg-red-500/10 text-red-200">
+            <AlertTitle>Unable to load profile</AlertTitle>
             <AlertDescription>{pageError}</AlertDescription>
           </Alert>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-          <Card className="border border-border/60 bg-card/90 shadow-[0_20px_80px_rgba(15,23,42,0.1)]">
-            <CardHeader>
-              <CardTitle>Identity card</CardTitle>
-              <CardDescription>
-                Profile details resolved from the active session.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                <Avatar size="lg" className="size-16 bg-primary/10">
-                  <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
-                    {initials(currentUser.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div className="space-y-1">
-                  <p className="text-2xl font-semibold">{currentUser.full_name}</p>
-                  <p className="font-mono text-sm text-muted-foreground">
-                    {currentUser.email}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                    Access level
-                  </p>
-                  <p className="mt-3 text-lg font-semibold capitalize">
-                    {currentUser.role}
-                  </p>
-                </div>
-                <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                    Last login
-                  </p>
-                  <p className="mt-3 text-lg font-semibold">
-                    {formatDate(currentUser.last_login_at)}
-                  </p>
-                </div>
-                <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                    Member since
-                  </p>
-                  <p className="mt-3 text-lg font-semibold">
-                    {formatDate(currentUser.created_at)}
-                  </p>
-                </div>
-                <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                  <p className="text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
-                    Status
-                  </p>
-                  <p className="mt-3 text-lg font-semibold">
-                    {currentUser.is_active ? "Active" : "Disabled"}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border border-border/60 bg-card/90 shadow-[0_20px_80px_rgba(15,23,42,0.1)]">
-            <CardHeader>
-              <CardTitle>Role permissions</CardTitle>
-              <CardDescription>
-                Quick view of what your current session can do.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                <p className="font-medium">Viewer</p>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Sign in, keep a profile, and access authenticated exports.
-                </p>
-              </div>
-              <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">Staff</p>
-                  {canReviewUsers ? <Badge className={roleStyles.staff}>Enabled</Badge> : null}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Review the full user directory and staff-level protected tools.
-                </p>
-              </div>
-              <div className="rounded-[1.5rem] border border-border/70 bg-background/75 p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">Admin</p>
-                  {canCreateUsers ? <Badge className={roleStyles.admin}>Enabled</Badge> : null}
-                </div>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Create new viewer, staff, and admin accounts directly from the profile.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="border border-border/60 bg-card/92 shadow-[0_20px_80px_rgba(15,23,42,0.1)]">
-          <CardHeader className="gap-3 md:flex-row md:items-end md:justify-between">
-            <div>
-              <CardTitle>Team directory</CardTitle>
-              <CardDescription>
-                Visible to staff and admin sessions. Search updates without blocking the page.
-              </CardDescription>
-            </div>
-
-            {canReviewUsers ? (
-              <div className="w-full max-w-sm">
-                <Label htmlFor="team-search" className="sr-only">
-                  Search users
-                </Label>
-                <Input
-                  id="team-search"
-                  placeholder="Search by name, email, or role"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                />
-              </div>
-            ) : null}
+        <Card className="border border-[#1E2640] bg-[#0D1220]">
+          <CardHeader>
+            <CardTitle className="text-[#E2E8F0]">Profile</CardTitle>
           </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-[#1E2640] bg-[#0A0E1A] p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#64748B]">Role</p>
+              <p className="mt-2 text-base font-semibold capitalize text-[#E2E8F0]">{currentUser.role}</p>
+            </div>
+            <div className="rounded-xl border border-[#1E2640] bg-[#0A0E1A] p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#64748B]">Last login</p>
+              <p className="mt-2 text-base font-semibold text-[#E2E8F0]">{formatDate(currentUser.last_login_at)}</p>
+            </div>
+            <div className="rounded-xl border border-[#1E2640] bg-[#0A0E1A] p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#64748B]">Member since</p>
+              <p className="mt-2 text-base font-semibold text-[#E2E8F0]">{formatDate(currentUser.created_at)}</p>
+            </div>
+            <div className="rounded-xl border border-[#1E2640] bg-[#0A0E1A] p-4">
+              <p className="text-xs uppercase tracking-[0.14em] text-[#64748B]">Status</p>
+              <p className="mt-2 text-base font-semibold text-[#E2E8F0]">{currentUser.is_active ? "Active" : "Disabled"}</p>
+            </div>
+          </CardContent>
+        </Card>
 
-          <CardContent>
-            {canReviewUsers ? (
-              filteredUsers.length > 0 ? (
+        {canReviewUsers ? (
+          <Card className="border border-[#1E2640] bg-[#0D1220]">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="text-[#E2E8F0]">Team users</CardTitle>
+                <div className="w-full sm:w-72">
+                  <Label htmlFor="team-search" className="sr-only">
+                    Search users
+                  </Label>
+                  <Input
+                    id="team-search"
+                    placeholder="Search by name, email, or role"
+                    value={search}
+                    onChange={(event) => setSearch(event.target.value)}
+                    className="border-[#1E2640] bg-[#0A0E1A] text-[#E2E8F0] placeholder:text-[#64748B]"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {filteredUsers.length > 0 ? (
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Role</TableHead>
-                      <TableHead>Last login</TableHead>
-                      <TableHead>Status</TableHead>
+                    <TableRow className="border-[#1E2640] hover:bg-transparent">
+                      <TableHead className="text-[#64748B]">Name</TableHead>
+                      <TableHead className="text-[#64748B]">Email</TableHead>
+                      <TableHead className="text-[#64748B]">Role</TableHead>
+                      <TableHead className="text-[#64748B]">Last login</TableHead>
+                      <TableHead className="text-[#64748B]">Status</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.map((user) => (
-                      <TableRow key={user.id}>
+                      <TableRow key={user.id} className="border-[#1E2640] text-[#E2E8F0]">
                         <TableCell className="font-medium">{user.full_name}</TableCell>
-                        <TableCell className="font-mono text-xs sm:text-sm">
-                          {user.email}
-                        </TableCell>
+                        <TableCell className="font-mono text-xs sm:text-sm">{user.email}</TableCell>
                         <TableCell>
                           <Badge className={roleStyles[user.role]}>{user.role}</Badge>
                         </TableCell>
@@ -401,36 +284,29 @@ export function ProfileShell({
                   </TableBody>
                 </Table>
               ) : (
-                <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-background/70 p-8 text-center text-sm text-muted-foreground">
+                <div className="rounded-xl border border-dashed border-[#1E2640] bg-[#0A0E1A] p-8 text-center text-sm text-[#64748B]">
                   No users matched the current search.
                 </div>
-              )
-            ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-border/70 bg-background/70 p-8 text-center text-sm text-muted-foreground">
-                Your current role can view only the personal profile card.
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
 
         {canCreateUsers ? (
-          <Card className="border border-border/60 bg-card/92 shadow-[0_20px_80px_rgba(15,23,42,0.1)]">
+          <Card className="border border-[#1E2640] bg-[#0D1220]">
             <CardHeader>
-              <CardTitle>Create a new user</CardTitle>
-              <CardDescription>
-                Admin-only user provisioning for viewer, staff, and admin accounts.
-              </CardDescription>
+              <CardTitle className="text-[#E2E8F0]">Create user</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
               {createError ? (
-                <Alert variant="destructive">
+                <Alert variant="destructive" className="border-red-500/50 bg-red-500/10 text-red-200">
                   <AlertTitle>User creation failed</AlertTitle>
                   <AlertDescription>{createError}</AlertDescription>
                 </Alert>
               ) : null}
 
               {createSuccess ? (
-                <Alert>
+                <Alert className="border-[#166534] bg-[#0D2A1A] text-[#86EFAC]">
                   <AlertTitle>User created</AlertTitle>
                   <AlertDescription>{createSuccess}</AlertDescription>
                 </Alert>
@@ -438,7 +314,7 @@ export function ProfileShell({
 
               <form className="grid gap-4 md:grid-cols-2" onSubmit={handleCreateUser}>
                 <div className="space-y-2">
-                  <Label htmlFor="full_name">Full name</Label>
+                  <Label htmlFor="full_name" className="text-[#94A3B8]">Full name</Label>
                   <Input
                     id="full_name"
                     value={createForm.full_name}
@@ -450,11 +326,12 @@ export function ProfileShell({
                     }
                     placeholder="Aruzhan Bekova"
                     disabled={isCreatingUser}
+                    className="border-[#1E2640] bg-[#0A0E1A] text-[#E2E8F0] placeholder:text-[#64748B]"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new_email">Email</Label>
+                  <Label htmlFor="new_email" className="text-[#94A3B8]">Email</Label>
                   <Input
                     id="new_email"
                     type="email"
@@ -467,11 +344,12 @@ export function ProfileShell({
                     }
                     placeholder="aruzhan@rook.local"
                     disabled={isCreatingUser}
+                    className="border-[#1E2640] bg-[#0A0E1A] text-[#E2E8F0] placeholder:text-[#64748B]"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="new_password">Temporary password</Label>
+                  <Label htmlFor="new_password" className="text-[#94A3B8]">Temporary password</Label>
                   <Input
                     id="new_password"
                     type="password"
@@ -484,14 +362,15 @@ export function ProfileShell({
                     }
                     placeholder="At least 8 characters"
                     disabled={isCreatingUser}
+                    className="border-[#1E2640] bg-[#0A0E1A] text-[#E2E8F0] placeholder:text-[#64748B]"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role" className="text-[#94A3B8]">Role</Label>
                   <select
                     id="role"
-                    className="h-9 w-full rounded-3xl border border-transparent bg-input/50 px-3 text-sm outline-none transition-[box-shadow,border-color] focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/30"
+                    className="h-9 w-full rounded-3xl border border-[#1E2640] bg-[#0A0E1A] px-3 text-sm text-[#E2E8F0] outline-none transition-[box-shadow,border-color] focus-visible:border-[#3B82F6] focus-visible:ring-3 focus-visible:ring-[#3B82F6]/30"
                     value={createForm.role}
                     onChange={(event) =>
                       setCreateForm((current) => ({
@@ -507,7 +386,7 @@ export function ProfileShell({
                   </select>
                 </div>
 
-                <div className="md:col-span-2 flex flex-wrap justify-end gap-3">
+                <div className="flex flex-wrap justify-end gap-3 md:col-span-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -517,10 +396,15 @@ export function ProfileShell({
                       setCreateSuccess(null)
                     }}
                     disabled={isCreatingUser}
+                    className="border-[#1E2640] bg-[#141929] text-[#94A3B8] hover:bg-[#1A2339] hover:text-[#E2E8F0]"
                   >
                     Reset form
                   </Button>
-                  <Button type="submit" disabled={isCreatingUser}>
+                  <Button
+                    type="submit"
+                    disabled={isCreatingUser}
+                    className="border border-[#2D4A80] bg-[#1E2D50] text-[#60A5FA] hover:bg-[#223761]"
+                  >
                     {isCreatingUser ? (
                       <>
                         <Spinner />
@@ -535,7 +419,6 @@ export function ProfileShell({
             </CardContent>
           </Card>
         ) : null}
-      </div>
     </div>
   )
 }

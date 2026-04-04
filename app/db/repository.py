@@ -34,6 +34,7 @@ def _from_ts(ts: float) -> datetime:
 # Telemetry
 # ---------------------------------------------------------------------------
 
+
 async def save_telemetry(session: AsyncSession, frame: TelemetryFrame) -> None:
     record = TelemetryRecord(
         loco_id=frame.loco_id,
@@ -64,12 +65,19 @@ async def get_telemetry(
     return [row.payload for row in result.scalars()]
 
 
+async def has_telemetry(session: AsyncSession, loco_id: str) -> bool:
+    stmt = select(TelemetryRecord.id).where(TelemetryRecord.loco_id == loco_id).limit(1)
+    result = await session.execute(stmt)
+    return result.scalar_one_or_none() is not None
+
+
 async def get_replay(
     session: AsyncSession,
     loco_id: str,
     minutes: int = 5,
 ) -> list[dict]:
     import time
+
     cutoff = time.time() - minutes * 60
     return await get_telemetry(session, loco_id, from_ts=cutoff)
 
@@ -79,6 +87,7 @@ async def purge_old_telemetry(
     retention_hours: int = 72,
 ) -> int:
     import time
+
     cutoff = _from_ts(time.time() - retention_hours * 3600)
     result = await session.execute(
         delete(TelemetryRecord).where(TelemetryRecord.ts < cutoff)
@@ -90,6 +99,7 @@ async def purge_old_telemetry(
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
+
 
 async def save_health(session: AsyncSession, hi: HealthIndex) -> None:
     record = HealthRecord(
@@ -145,6 +155,7 @@ async def get_latest_health(session: AsyncSession, loco_id: str) -> HealthRecord
 # Alerts
 # ---------------------------------------------------------------------------
 
+
 async def save_alert(session: AsyncSession, alert: Alert) -> None:
     record = AlertRecord(
         alert_id=alert.alert_id,
@@ -165,23 +176,28 @@ async def save_alert(session: AsyncSession, alert: Alert) -> None:
     )
     # Upsert: ignore if alert_id already exists
     from sqlalchemy.dialects.postgresql import insert as pg_insert
-    stmt = pg_insert(AlertRecord).values(
-        alert_id=record.alert_id,
-        loco_id=record.loco_id,
-        loco_type=record.loco_type,
-        param_id=record.param_id,
-        label=record.label,
-        severity=record.severity,
-        status=record.status,
-        value=record.value,
-        threshold=record.threshold,
-        unit=record.unit,
-        message=record.message,
-        recommendation=record.recommendation,
-        penalty=record.penalty,
-        triggered_at=record.triggered_at,
-        resolved_at=record.resolved_at,
-    ).on_conflict_do_nothing(index_elements=["alert_id"])
+
+    stmt = (
+        pg_insert(AlertRecord)
+        .values(
+            alert_id=record.alert_id,
+            loco_id=record.loco_id,
+            loco_type=record.loco_type,
+            param_id=record.param_id,
+            label=record.label,
+            severity=record.severity,
+            status=record.status,
+            value=record.value,
+            threshold=record.threshold,
+            unit=record.unit,
+            message=record.message,
+            recommendation=record.recommendation,
+            penalty=record.penalty,
+            triggered_at=record.triggered_at,
+            resolved_at=record.resolved_at,
+        )
+        .on_conflict_do_nothing(index_elements=["alert_id"])
+    )
     await session.execute(stmt)
     await session.commit()
 
@@ -200,23 +216,25 @@ async def get_alerts(
 
     alerts = []
     for row in result.scalars():
-        alerts.append(Alert(
-            alert_id=row.alert_id,
-            loco_id=row.loco_id,
-            loco_type=row.loco_type,
-            param_id=row.param_id,
-            label=row.label,
-            severity=row.severity,
-            status=row.status,
-            value=row.value,
-            threshold=row.threshold,
-            unit=row.unit,
-            message=row.message,
-            recommendation=row.recommendation,
-            penalty=row.penalty,
-            triggered_at=row.triggered_at.timestamp(),
-            resolved_at=row.resolved_at.timestamp() if row.resolved_at else None,
-        ))
+        alerts.append(
+            Alert(
+                alert_id=row.alert_id,
+                loco_id=row.loco_id,
+                loco_type=row.loco_type,
+                param_id=row.param_id,
+                label=row.label,
+                severity=row.severity,
+                status=row.status,
+                value=row.value,
+                threshold=row.threshold,
+                unit=row.unit,
+                message=row.message,
+                recommendation=row.recommendation,
+                penalty=row.penalty,
+                triggered_at=row.triggered_at.timestamp(),
+                resolved_at=row.resolved_at.timestamp() if row.resolved_at else None,
+            )
+        )
     return alerts
 
 

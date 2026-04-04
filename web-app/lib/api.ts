@@ -28,6 +28,117 @@ export interface CreateUserRequest {
   role: UserRole
 }
 
+export interface GroupScore {
+  group: string
+  score: number
+  weight: number
+}
+
+export interface HealthFactor {
+  param_id: string
+  label: string
+  value: number
+  unit: string
+  normalized: number
+  weight: number
+  contribution: number
+  group: string
+  status: string
+}
+
+export interface HealthIndex {
+  loco_id: string
+  loco_type: string
+  timestamp: number
+  index: number
+  grade: "A" | "B" | "C" | "D" | "E"
+  group_scores: GroupScore[]
+  top_factors: HealthFactor[]
+  alert_penalty: number
+}
+
+export interface AlertItem {
+  alert_id: string
+  loco_id: string
+  loco_type: string
+  param_id: string
+  label: string
+  severity: "info" | "warning" | "critical"
+  status: "active" | "resolved"
+  value: number
+  threshold: number
+  unit: string
+  message: string
+  recommendation: string
+  penalty: number
+  triggered_at: number
+  resolved_at: number | null
+}
+
+export interface TelemetryFrame {
+  loco_type: "KZ8A" | "TE33A"
+  loco_id: string
+  timestamp: number
+  scenario: string
+  traction: {
+    speed: number
+    tractive_effort: number
+    traction_motor_current: number[]
+    controller_position: number
+    brake_pipe_pressure: number
+    brake_cylinder_pressure: number
+    brake_force: number
+  }
+  resources: {
+    fuel_level?: number
+    fuel_consumption?: number
+    coolant_temperature?: number
+    engine_rpm?: number
+    catenary_voltage?: number
+    traction_power?: number
+    battery_voltage?: number
+  }
+  nodes: {
+    motor_temperatures: number[]
+    axle_bearing_temps: number[]
+    error_codes: string[]
+    active_alerts: string[]
+  }
+  navigation: {
+    latitude: number
+    longitude: number
+    odometer: number
+    route_section: string
+    speed_limit: number
+    signal_status: "green" | "yellow" | "red"
+    connection_status: "connected" | "disconnected"
+  }
+}
+
+export interface TelemetryWsPayload {
+  telemetry: TelemetryFrame
+  health: HealthIndex
+  alerts: {
+    loco_id: string
+    total: number
+    critical: number
+    warning: number
+    info: number
+    alerts: AlertItem[]
+  }
+}
+
+export interface LocomotiveProfile {
+  id: "KZ8A" | "TE33A"
+  name: string
+  manufacturer: string
+  type: string
+  max_speed_kmh: number
+  power_kw: number
+  axes: number
+  traction: string
+}
+
 export class ApiError extends Error {
   status: number
 
@@ -98,4 +209,22 @@ export function createUser(payload: CreateUserRequest) {
     method: "POST",
     body: JSON.stringify(payload),
   })
+}
+
+export function fetchLocomotiveProfiles() {
+  return apiRequest<LocomotiveProfile[]>("/api/locomotive/profiles")
+}
+
+export function fetchCurrentHealth(locoId: string) {
+  return apiRequest<HealthIndex>(`/api/health?loco_id=${encodeURIComponent(locoId)}`)
+}
+
+export function fetchActiveAlerts(locoId: string) {
+  return apiRequest<AlertItem[]>(`/api/alerts?loco_id=${encodeURIComponent(locoId)}`)
+}
+
+export function fetchTelemetryReplay(locoId: string, minutes: number) {
+  return apiRequest<TelemetryFrame[]>(
+    `/api/telemetry/replay?loco_id=${encodeURIComponent(locoId)}&minutes=${minutes}`
+  )
 }

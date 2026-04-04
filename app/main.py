@@ -23,6 +23,7 @@ from app.routers import (
     users_router,
     websocket,
 )
+from app.services.bootstrap_data import bootstrap_mock_telemetry
 
 logging.basicConfig(
     level=logging.INFO,
@@ -65,9 +66,11 @@ def create_app() -> FastAPI:
         load_thresholds()
         await create_tables()
         await bootstrap_default_users()
+        await bootstrap_mock_telemetry()
         logger.info(
             "DB tables ready. App started on %s:%s",
-            settings.app_host, settings.app_port,
+            settings.app_host,
+            settings.app_port,
         )
 
     @app.get("/api/healthcheck", tags=["system"])
