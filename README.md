@@ -5,3 +5,11 @@ docker-compose up --build
 
 source venv/bin/activate
 uvicorn app.main:app --reload --port 8000
+
+Auth defaults after startup:
+- Admin: `admin@rook.local` / `ChangeMe123!`
+- Staff: `staff@rook.local` / `ChangeMe123!`
+
+Frontend routes:
+- Login: `http://localhost:3000/login`
+- Profile: `http://localhost:3000/profile`

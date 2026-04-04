@@ -8,21 +8,22 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 
-from app.auth.basic_auth import require_auth
+from app.auth.session_auth import require_staff
 from app.config import get_thresholds, load_thresholds, save_thresholds
+from app.db.models import UserRecord
 
 router = APIRouter(prefix="/api/config", tags=["config"])
 
 
 @router.get("/thresholds")
-async def get_thresholds_api(_: str = Depends(require_auth)) -> dict[str, Any]:
+async def get_thresholds_api(_: UserRecord = Depends(require_staff)) -> dict[str, Any]:
     return get_thresholds()
 
 
 @router.put("/thresholds")
 async def update_thresholds(
     body: dict[str, Any],
-    _: str = Depends(require_auth),
+    _: UserRecord = Depends(require_staff),
 ) -> dict[str, Any]:
     current = get_thresholds()
     current.update(body)
@@ -31,14 +32,14 @@ async def update_thresholds(
 
 
 @router.get("/weights")
-async def get_weights(_: str = Depends(require_auth)) -> dict[str, float]:
+async def get_weights(_: UserRecord = Depends(require_staff)) -> dict[str, float]:
     return get_thresholds().get("weights", {})
 
 
 @router.put("/weights")
 async def update_weights(
     body: dict[str, float],
-    _: str = Depends(require_auth),
+    _: UserRecord = Depends(require_staff),
 ) -> dict[str, float]:
     current = get_thresholds()
     current["weights"] = body

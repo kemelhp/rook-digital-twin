@@ -21,6 +21,17 @@ class Settings(BaseSettings):
     app_port: int = 8000
     auth_username: str = "admin"
     auth_password: str = "changeme"
+    cors_origins: str = "http://localhost:3000,http://127.0.0.1:3000"
+    session_secret: str = "change-me-in-production"
+    session_cookie_name: str = "rook_session"
+    session_ttl_hours: int = 24
+    session_cookie_secure: bool = False
+    default_admin_email: str = "admin@rook.local"
+    default_admin_password: str = "ChangeMe123!"
+    default_admin_name: str = "Operations Admin"
+    default_staff_email: str = "staff@rook.local"
+    default_staff_password: str = "ChangeMe123!"
+    default_staff_name: str = "Dispatch Staff"
     simulator_frequency_hz: float = 1.0
     simulator_loco_type: str = "TE33A"
     history_retention_hours: int = 72
@@ -29,12 +40,25 @@ class Settings(BaseSettings):
     # PostgreSQL
     database_url: str = "postgresql+asyncpg://loco:loco@localhost:5432/digital_twin"
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "extra": "ignore",
+    }
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def get_cors_origins() -> list[str]:
+    settings = get_settings()
+    return [
+        origin.strip()
+        for origin in settings.cors_origins.split(",")
+        if origin.strip()
+    ]
 
 
 # ---------------------------------------------------------------------------

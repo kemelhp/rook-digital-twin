@@ -12,8 +12,10 @@ from fastapi import APIRouter, Depends, Query
 from fastapi.responses import Response, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.session_auth import get_current_user
 from app.db.engine import get_session
 from app.db import repository as repo
+from app.db.models import UserRecord
 
 router = APIRouter(prefix="/api", tags=["export"])
 
@@ -23,6 +25,7 @@ async def export_data(
     loco_id: str = Query(...),
     format: str = Query(default="json", pattern="^(json|csv)$"),
     minutes: int = Query(default=15, ge=1, le=1440),
+    _: UserRecord = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ) -> Response:
     frames = await repo.get_replay(session, loco_id, minutes=minutes)
