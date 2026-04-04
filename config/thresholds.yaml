@@ -1,0 +1,106 @@
+# Пороги телеметрических параметров и веса групп для индекса здоровья
+# Можно менять на лету через API /api/config/thresholds
+
+weights:
+  traction: 0.30
+  resources: 0.25
+  nodes: 0.25
+  brakes: 0.15
+  alerts: 0.05
+
+# Штраф за один алерт (вычитается из индекса)
+alert_penalties:
+  info: 2.0
+  warning: 5.0
+  critical: 15.0
+
+# Пороги: [warning_lo, warning_hi, critical_lo, critical_hi]
+# Значение вне warning → статус warning; вне critical → статус critical
+thresholds:
+  # --- Общие ---
+  speed:
+    warning: [0, 115]
+    critical: [0, 120]
+    unit: "км/ч"
+
+  brake_pipe_pressure:
+    warning: [490, 520]
+    critical: [460, 560]
+    unit: "кПа"
+
+  brake_cylinder_pressure:
+    warning: [0, 360]
+    critical: [0, 390]
+    unit: "кПа"
+
+  traction_motor_current:
+    warning: [0, 1000]
+    critical: [0, 1150]
+    unit: "А"
+
+  motor_temperature:
+    warning: [40, 150]
+    critical: [20, 170]
+    unit: "°C"
+
+  axle_bearing_temp:
+    warning: [20, 75]
+    critical: [10, 90]
+    unit: "°C"
+
+  # --- KZ8A ---
+  catenary_voltage:
+    warning: [22, 27]
+    critical: [19, 29]
+    unit: "кВ"
+
+  dc_bus_voltage:
+    warning: [1700, 1900]
+    critical: [1550, 1980]
+    unit: "В"
+
+  transformer_temp:
+    warning: [40, 115]
+    critical: [20, 140]
+    unit: "°C"
+
+  battery_voltage_kz8a:
+    warning: [105, 115]
+    critical: [95, 125]
+    unit: "В"
+
+  # --- TE33A ---
+  fuel_level:
+    warning: [20, 100]
+    critical: [10, 100]
+    unit: "%"
+
+  coolant_temperature:
+    warning: [70, 95]
+    critical: [55, 105]
+    unit: "°C"
+
+  oil_temperature:
+    warning: [60, 110]
+    critical: [45, 125]
+    unit: "°C"
+
+  oil_pressure:
+    warning: [300, 520]
+    critical: [220, 600]
+    unit: "кПа"
+
+  engine_rpm:
+    warning: [400, 980]
+    critical: [300, 1030]
+    unit: "об/мин"
+
+  exhaust_temperature:
+    warning: [200, 530]
+    critical: [150, 600]
+    unit: "°C"
+
+  battery_voltage_te33a:
+    warning: [62, 74]
+    critical: [55, 78]
+    unit: "В"
